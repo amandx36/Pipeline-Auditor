@@ -12,14 +12,16 @@ func main 	(){
 	
 	// map the function with  the url 
 	server.HandleFunc("/webhook/github",handleGitHubWebHook);
+	log.Println("Server listening on 8090");
 	// start  the server 
 	err := http.ListenAndServe(":8090",server);
+
+	
 	if err != nil {
 		log.Println(("Error while Running the server "))
 		log.Fatal(err)
 	}
 
-	log.Println("Server listening on 8080");
 }
 
 // http methods has 3 things 
@@ -32,5 +34,5 @@ func handleGitHubWebHook(resp http.ResponseWriter, clientReq  *http.Request){
 	// send ok status code 
 	resp.WriteHeader(http.StatusOK)
 	// write in body 
-	resp.Write([]byte("Request received"))
+	resp.Write([]byte("Request received go and do the job done "))
 }

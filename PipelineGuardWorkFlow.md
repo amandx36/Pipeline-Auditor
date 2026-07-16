@@ -259,3 +259,8 @@ Phase 9
 ──────────────
 DevMind Integration
 PatchPilot Integration 
+
+
+Push → GitHub Actions run → Fail → Webhook (metadata) → Tera server
+   → GitHub API se logs fetch (using workflow run ID from webhook)
+   → Log parse + analyze → Root cause → Report

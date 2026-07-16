@@ -1,0 +1,13 @@
+Developer
+      ↓
+GitHub
+      ↓
+Webhook
+      ↓
+PipelineGuard API
+      ↓
+Verify Signature
+      ↓
+Parse Event
+      ↓
+Store Metadata

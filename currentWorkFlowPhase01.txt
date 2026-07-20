@@ -11,3 +11,435 @@ Verify Signature
 Parse Event
       ↓
 Store Metadata
+
+
+# packages information   !!!!!!!!!!!!
+
+
+
+internal/
+
+    webhook/
+
+    github/
+
+    collector/
+
+    parser/
+
+    analyzer/
+
+    repository/
+
+    api/
+
+    notifier/
+
+    metrics/
+
+
+
+    # Internal Architecture
+
+PipelineGuard follows the **Single Responsibility Principle (SRP)**. Every package is responsible for exactly one part of the pipeline lifecycle. This makes the system modular, maintainable, and easy to extend when adding new CI/CD providers like GitHub Actions, GitLab CI, Jenkins, Azure DevOps, or Bitbucket.
+
+---
+
+# Package Responsibilities
+
+## webhook/
+
+### Purpose
+
+Receives webhook events from supported CI/CD providers.
+
+### Responsibilities
+
+- Receive HTTP webhook requests
+- Verify webhook signatures
+- Validate HTTP methods
+- Decode JSON payloads
+- Normalize provider payload into a common event
+- Pass the event to the service layer
+- Return an HTTP response quickly
+
+### Should NOT
+
+- Download logs
+- Analyze failures
+- Store database records
+- Send notifications
+
+### Interview Note
+
+> The webhook package acts as the entry point of the application. Its only responsibility is to receive and validate incoming events before forwarding them to the business logic.
+
+---
+
+## github/
+
+### Purpose
+
+Communicates with the GitHub REST API.
+
+### Responsibilities
+
+- Fetch workflow information
+- Fetch workflow jobs
+- Fetch workflow steps
+- Download workflow logs
+- Download workflow artifacts
+- Authenticate requests using GitHub Token
+- Handle pagination and retries
+
+### Should NOT
+
+- Analyze logs
+- Store data
+- Send notifications
+
+### Interview Note
+
+> The GitHub package is an API client responsible only for communicating with GitHub services.
+
+---
+
+## collector/
+
+### Purpose
+
+Collects all required pipeline information before analysis.
+
+### Responsibilities
+
+- Collect workflow metadata
+- Collect jobs
+- Collect stages
+- Collect workflow logs
+- Collect artifacts (future)
+- Create a complete PipelineRun object
+
+### Should NOT
+
+- Parse logs
+- Detect failures
+
+### Interview Note
+
+> The collector aggregates all required pipeline information into one object before sending it for analysis.
+
+---
+
+## parser/
+
+### Purpose
+
+Converts provider-specific logs into a common internal format.
+
+### Responsibilities
+
+- Parse GitHub logs
+- Parse GitLab logs
+- Parse Jenkins logs
+- Normalize timestamps
+- Normalize stages
+- Normalize log levels
+- Produce a common LogEntry model
+
+### Output
+
+```go
+type LogEntry struct {
+    Timestamp time.Time
+    Stage     string
+    Level     string
+    Message   string
+}
+```
+
+### Should NOT
+
+- Detect root causes
+- Store reports
+
+### Interview Note
+
+> Every CI/CD provider has different log formats. The parser converts all of them into one common format so the analyzer doesn't need provider-specific logic.
+
+---
+
+## analyzer/
+
+### Purpose
+
+Determines why the pipeline failed.
+
+### Responsibilities
+
+- Detect failed stage
+- Detect failure type
+- Detect dependency issues
+- Detect infrastructure issues
+- Detect timeout failures
+- Detect authentication failures
+- Classify root cause
+- Generate failure summary
+
+### Output
+
+```go
+type FailureReport struct {
+    FailedStage string
+    RootCause   string
+    Summary     string
+}
+```
+
+### Should NOT
+
+- Call GitHub APIs
+- Store database records
+
+### Interview Note
+
+> The analyzer is the core business logic of PipelineGuard. It transforms parsed logs into actionable failure reports.
+
+---
+
+## repository/
+
+### Purpose
+
+Handles persistent storage.
+
+### Responsibilities
+
+- Save workflow runs
+- Save jobs
+- Save reports
+- Search reports
+- Update workflow status
+- Read historical reports
+
+### Should NOT
+
+- Analyze logs
+- Download workflow information
+
+### Interview Note
+
+> Repository abstracts database operations from the business logic.
+
+---
+
+## api/
+
+### Purpose
+
+Exposes PipelineGuard data through REST APIs.
+
+### Responsibilities
+
+- Return reports
+- Return workflow history
+- Search reports
+- Return metrics
+- Provide dashboard endpoints
+
+### Example APIs
+
+```
+GET /reports
+GET /reports/{id}
+GET /workflows
+GET /jobs
+GET /search
+```
+
+### Should NOT
+
+- Analyze failures
+- Download logs
+
+### Interview Note
+
+> The API package exposes business data without containing business logic.
+
+---
+
+## notifier/
+
+### Purpose
+
+Notifies users about pipeline events.
+
+### Responsibilities
+
+- Send Slack notifications
+- Send Discord notifications
+- Send Email notifications
+- Retry failed notifications
+- Format notification messages
+
+### Should NOT
+
+- Analyze logs
+- Store reports
+
+### Interview Note
+
+> The notifier is responsible only for external communication with users.
+
+---
+
+## metrics/
+
+### Purpose
+
+Tracks application health and operational statistics.
+
+### Responsibilities
+
+- Count successful pipelines
+- Count failed pipelines
+- Count total workflows
+- Measure analysis duration
+- Measure webhook latency
+- Expose Prometheus metrics
+
+### Example Metrics
+
+```
+pipeline_total
+
+pipeline_success_total
+
+pipeline_failure_total
+
+pipeline_analysis_duration_seconds
+
+webhook_requests_total
+
+github_api_requests_total
+```
+
+### Should NOT
+
+- Store reports
+- Parse logs
+
+### Interview Note
+
+> Metrics provide observability into the application's performance and reliability.
+
+---
+
+# Overall Request Flow
+
+```
+GitHub Actions
+        │
+        ▼
+Webhook Receiver
+        │
+        ▼
+Verify Signature
+        │
+        ▼
+Parse Request
+        │
+        ▼
+GitHub Client
+        │
+        ▼
+Collector
+        │
+        ▼
+Parser
+        │
+        ▼
+Analyzer
+        │
+        ▼
+Repository
+        │
+        ├──────────────┐
+        ▼              ▼
+      Metrics      Notifier
+        │
+        ▼
+     REST API
+```
+
+---
+
+# Design Principles
+
+PipelineGuard follows the following design principles:
+
+- Single Responsibility Principle (SRP)
+- Interface-based design
+- Dependency Injection
+- Clean Architecture
+- Separation of Concerns
+- Provider Agnostic Design
+- Event Driven Architecture
+- Modular Package Structure
+
+---
+
+# Common Internal Models
+
+```go
+PipelineEvent
+        │
+        ▼
+PipelineRun
+        │
+        ▼
+Workflow
+        │
+        ▼
+Job
+        │
+        ▼
+Step
+        │
+        ▼
+LogEntry
+        │
+        ▼
+FailureReport
+```
+
+Every supported provider (GitHub, GitLab, Jenkins, Azure DevOps) is first converted into these common internal models. This allows the analyzer to remain provider-independent.
+
+---
+
+# Interview Summary
+
+### Why separate packages?
+
+Each package has only one responsibility, making the project easier to maintain, test, and extend.
+
+### Why use a parser?
+
+Different CI/CD providers produce different log formats. The parser converts all logs into one common structure.
+
+### Why use collectors?
+
+Collectors gather workflow metadata, jobs, steps, and logs before analysis.
+
+### Why separate analyzer from parser?
+
+The parser understands **how logs are written**.
+
+The analyzer understands **why the pipeline failed**.
+
+### Why repository pattern?
+
+It separates database logic from business logic, making it easier to replace PostgreSQL with another database in the future.
+
+### Why normalize events?
+
+Every provider sends different webhook payloads. Normalizing them allows the rest of the system to work with a single common model.

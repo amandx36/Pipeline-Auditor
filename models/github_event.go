@@ -14,8 +14,8 @@ type WorkflowRun struct {
     Status     string  `json:"status"`      // for status check 
     Conclusion *string `json:"conclusion"`  // failure/success — 
     JobsURL    string  `json:"jobs_url"`    // GitHub API se jobs fetch karne ka seedha URL
-    LogsURL    string  `json:"logs_url"`    // for downlaod logs 
-    HTMLURL    string  `json:"html_url"`    // for clickable link 
+    LogsURL    string  `json:"logs_url"`    // for download logs
+    HTMLURL    string  `json:"html_url"`    // for clickable link
 }
 
 type Repository struct {

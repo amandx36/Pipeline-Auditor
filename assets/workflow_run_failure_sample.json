@@ -1,0 +1,41 @@
+{
+  "action": "completed",
+  "workflow": {
+    "id": 159038,
+    "name": "CI",
+    "path": ".github/workflows/ci.yml"
+  },
+  "workflow_run": {
+    "id": 30433642,
+    "name": "CI",
+    "node_id": "MDEyOldvcmtmbG93IFJ1bjI2OTI4OQ==",
+    "head_branch": "main",
+    "head_sha": "acb5820ced9479c074f688cc328bf03f341a511d",
+    "path": ".github/workflows/ci.yml@main",
+    "run_number": 42,
+    "event": "push",
+    "display_title": "Fix null pointer in handler",
+    "status": "completed",
+    "conclusion": "failure",
+    "workflow_id": 159038,
+    "url": "https://api.github.com/repos/amandx36/pipelineguard/actions/runs/30433642",
+    "html_url": "https://github.com/amandx36/pipelineguard/actions/runs/30433642",
+    "run_attempt": 1,
+    "run_started_at": "2026-07-16T10:30:00Z",
+    "created_at": "2026-07-16T10:30:00Z",
+    "updated_at": "2026-07-16T10:32:15Z",
+    "jobs_url": "https://api.github.com/repos/amandx36/pipelineguard/actions/runs/30433642/jobs",
+    "logs_url": "https://api.github.com/repos/amandx36/pipelineguard/actions/runs/30433642/logs",
+    "check_suite_url": "https://api.github.com/repos/amandx36/pipelineguard/check-suites/414944374",
+    "workflow_url": "https://api.github.com/repos/amandx36/pipelineguard/actions/workflows/159038"
+  },
+  "repository": {
+    "id": 1296269,
+    "name": "pipelineguard",
+    "full_name": "amandx36/pipelineguard"
+  },
+  "sender": {
+    "login": "amandx36",
+    "id": 44556677
+  }
+}

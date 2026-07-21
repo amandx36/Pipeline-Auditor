@@ -3,24 +3,27 @@ package main
 import (
 	"log"
 	"net/http"
+
+	"github.com/gin-gonic/gin"
+	
 )
 
 
 func main 	(){
-	// new http request and map url with the function 
-	server := 	http.NewServeMux();
+	// gin router 
+	router := gin.Default()
 	
-	// map the function with  the url 
-	server.HandleFunc("/webhook/github",handleGitHubWebHook);
-	log.Println("Server listening on 8090");
-	// start  the server 
-	err := http.ListenAndServe(":8090",server);
 
-	
-	if err != nil {
-		log.Println(("Error while Running the server "))
-		log.Fatal(err)
+	router.GET("/ping",Pong)
+	// map the url 
+	router.POST("webhook/github",handleGitHubWebHook)
+	log.Println("Server Started in port 8090")
+
+	err := router.Run(":8090")
+	if err != nil{
+		log.Println("Error while running the server",err)
 	}
+
 
 }
 
@@ -30,9 +33,10 @@ func main 	(){
 // header 
 // Body 
 
-func handleGitHubWebHook(resp http.ResponseWriter, clientReq  *http.Request){
-	// send ok status code 
-	resp.WriteHeader(http.StatusOK)
-	// write in body 
-	resp.Write([]byte("Request received go and do the job done "))
+func handleGitHubWebHook(ctxWrapper* gin.Context){
+	ctxWrapper.String(http.StatusOK,"Request received")
+	
+}
+func Pong(ctxWrapper*gin.Context){
+	ctxWrapper.String(http.StatusOK,"Pong")
 }

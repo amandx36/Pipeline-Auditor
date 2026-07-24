@@ -7,11 +7,16 @@ import (
 	github_webhook "Pipeline-Auditor/internal/webhook/github"
 
 	"github.com/gin-gonic/gin"
+	"github.com/joho/godotenv"
 )
 
 func main() {
 
 	router := gin.Default()
+	err := godotenv.Load()
+	if err != nil {
+		log.Println("Error while loading the env",err)
+	}
 
 	router.GET("/ping", Pong)
 

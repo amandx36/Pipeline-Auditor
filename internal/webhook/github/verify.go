@@ -50,7 +50,14 @@ func VerifySignature(ctx *gin.Context, body []byte) bool {
 
 		return false
 	}
-
+	fmt.Println("===================================")
+fmt.Println("GitHub Signature :", GitHUbSignature)
+fmt.Println("My Signature     :", expectedSignature)
+fmt.Println("Signature Match  :", hmac.Equal(
+	[]byte(expectedSignature),
+	[]byte(GitHUbSignature),
+))
+fmt.Println("===================================")
 	log.Println("Signature Verified Successfully")
 
 	return true

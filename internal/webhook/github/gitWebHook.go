@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -24,9 +25,9 @@ func HandleGitHubWebHook(ctx *gin.Context) {
 	fmt.Println(string(body))
 
 	// Verify GitHub Signature
-	if VerifySignature(ctx, body) {
-		fmt.Println("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nPassedddddd \n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n ")
-		
+	if !VerifySignature(ctx, body) {
+		log.Println("Invalid in verifying the signature")
+		return 		
 	}
 
 	// Unmarshal JSON
@@ -48,5 +49,6 @@ func HandleGitHubWebHook(ctx *gin.Context) {
 	fmt.Println("Logs URL    :", payload.WorkflowRun.LogsURL)
 	fmt.Println("Repository  :", payload.Repository.FullName)
 
+	
 	ctx.String(http.StatusOK, "OK")
 }

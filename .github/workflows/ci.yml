@@ -5,14 +5,9 @@ on:
   workflow_dispatch:
 
 jobs:
-  build:
+  webhook-trigger:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-go@v5
-        with:
-          go-version: "1.24"
-
-    
+      - name: Trigger Pipeline
+        run: echo "PipelineGuard webhook test"

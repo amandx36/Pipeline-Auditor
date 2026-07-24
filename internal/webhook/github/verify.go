@@ -5,21 +5,16 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
-	"io"
+	
 	"log"
 	"net/http"
 	"os"
 	"github.com/gin-gonic/gin"
 )
 
-func VerifySignature(ctx *gin.Context) bool {
+func VerifySignature(ctx *gin.Context, body []byte) bool {
 
 	
-	body, err := io.ReadAll(ctx.Request.Body)
-	if err != nil {
-		log.Println("Error while reading the body:", err)
-		return false
-	}
 
 	fmt.Println(string(body))
 
@@ -37,8 +32,10 @@ func VerifySignature(ctx *gin.Context) bool {
 	// mine hmac signature machine 
 	mineNewSignature := hmac.New(sha256.New, []byte(gitHubSecret))
 		// filling the data 
-	mineNewSignature.Write(body)
-
+	if _, err := mineNewSignature.Write(body); err != nil {
+	log.Println("Error while writing body to HMAC:", err)
+	return false
+		}
 	// converting the signature according to the github 
 	expectedSignature := "sha256=" + hex.EncodeToString(mineNewSignature.Sum(nil))
 

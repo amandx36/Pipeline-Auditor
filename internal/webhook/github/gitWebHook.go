@@ -2,47 +2,51 @@ package github_webhook
 
 import (
 	"encoding/json"
-	"net/http"
-	"net/http/httputil"
 	"fmt"
+	"io"
+	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
 
-
 func HandleGitHubWebHook(ctx *gin.Context) {
-	dump, err := httputil.DumpRequest(ctx.Request, true)
+
+	// Read request body
+	body, err := io.ReadAll(ctx.Request.Body)
 	if err != nil {
-		ctx.String(http.StatusInternalServerError, err.Error())
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"error": "unable to read request body",
+		})
 		return
 	}
 
-	// fmt.Println("GIT HUB WEBHOOK")
-	fmt.Println(string(dump))
-	
+	// Print raw JSON (for debugging)
+	fmt.Println(string(body))
 
-	// now Unmarshal 
-	var payload WorkflowRunPayload ;
+	// Verify GitHub Signature
+	if VerifySignature(ctx, body) {
+		fmt.Println("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nPassedddddd \n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n ")
+		
+	}
 
-	// unmarshal 
+	// Unmarshal JSON
+	var payload WorkflowRunPayload
 
-if err := json.Unmarshal(dump, &payload); err != nil {
-    ctx.JSON(http.StatusBadRequest, gin.H{
-        "error": "invalid payload",
-    })
-    return
-}
+	if err := json.Unmarshal(body, &payload); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"error": "invalid payload",
+		})
+		return
+	}
 
-fmt.Println("\n\n\n\n\n\n\n\n")
-fmt.Println(payload.Action)
-fmt.Println(payload.WorkflowRun.ID)
-fmt.Println(payload.WorkflowRun.Status)
-fmt.Println(payload.WorkflowRun.Conclusion)
-fmt.Println(payload.WorkflowRun.JobsURL)
-fmt.Println(payload.WorkflowRun.LogsURL)
-fmt.Println(payload.Repository.FullName)
-
-
+	fmt.Println("GitHub Workflow ")
+	fmt.Println("Action      :", payload.Action)
+	fmt.Println("Run ID      :", payload.WorkflowRun.ID)
+	fmt.Println("Status      :", payload.WorkflowRun.Status)
+	fmt.Println("Conclusion  :", payload.WorkflowRun.Conclusion)
+	fmt.Println("Jobs URL    :", payload.WorkflowRun.JobsURL)
+	fmt.Println("Logs URL    :", payload.WorkflowRun.LogsURL)
+	fmt.Println("Repository  :", payload.Repository.FullName)
 
 	ctx.String(http.StatusOK, "OK")
 }

@@ -1,42 +1,41 @@
 package main
 
 import (
+
+	"fmt"
 	"log"
 	"net/http"
+	"net/http/httputil"
 
 	"github.com/gin-gonic/gin"
-	
 )
 
-
-func main 	(){
-	// gin router 
+func main() {
 	router := gin.Default()
-	
 
-	router.GET("/ping",Pong)
-	// map the url 
-	router.POST("webhook/github",handleGitHubWebHook)
-	log.Println("Server Started in port 8090")
+	router.GET("/ping", Pong)
+	router.POST("/webhook/github", handleGitHubWebHook)
 
-	err := router.Run(":8090")
-	if err != nil{
-		log.Println("Error while running the server",err)
+	log.Println("Server started on port :8090")
+
+	if err := router.Run(":8090"); err != nil {
+		log.Fatal(err)
+	}
+}
+func handleGitHubWebHook(c *gin.Context) {
+	dump, err := httputil.DumpRequest(c.Request, true)
+	if err != nil {
+		c.String(http.StatusInternalServerError, err.Error())
+		return
 	}
 
+	fmt.Println("========== GITHUB WEBHOOK ==========")
+	fmt.Println(string(dump))
+	fmt.Println("====================================")
 
+	c.String(http.StatusOK, "OK")
 }
 
-// http methods has 3 things 
-
-// Request line 
-// header 
-// Body 
-
-func handleGitHubWebHook(ctxWrapper* gin.Context){
-	ctxWrapper.String(http.StatusOK,"Request received")
-	
-}
-func Pong(ctxWrapper*gin.Context){
-	ctxWrapper.String(http.StatusOK,"Pong")
+func Pong(c *gin.Context) {
+	c.String(http.StatusOK, "Pong")
 }

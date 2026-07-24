@@ -1,1 +1,1 @@
-package github
+package github_webhook

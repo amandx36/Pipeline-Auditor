@@ -1,4 +1,4 @@
-package github
+package github_webhook
 type WorkflowRunPayload struct {
 	Action      string       `json:"action"`
 	WorkflowRun WorkflowRun  `json:"workflow_run"`

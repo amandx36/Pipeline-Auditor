@@ -1,0 +1,13 @@
+name: PipelineGuard CI
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  webhook-trigger:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Trigger Pipeline
+        run: echo "PipelineGuard webhook test"

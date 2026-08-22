@@ -1,5 +1,4 @@
-module 
-Pipeline-Auditor
+module Pipeline-Auditor
 go 1.26.5
 
 require (

@@ -3,6 +3,7 @@ package models
 import "time"
 
 type PipelineEvent struct {
+	
 	ID           uint      `json:"id"`
 	Provider     string    `json:"provider"`
 	Repository   string    `json:"repository"`

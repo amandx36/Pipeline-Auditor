@@ -1,11 +1,43 @@
-package wrapper
-
-import(
-	"pipeline-Auditor/internal/models"
+package wrapper 
+import (
 	"time"
-	 github_webhook "pipeline-Auditor/internal/webhook/github"
+	github_webhook "Pipeline-Auditor/internal/webhook/github"
+	"Pipeline-Auditor/internal/models"
 
-) 
-func GitHubToPipelineEvent( payload github_webhook.payload)(models.pipelineEven,error){
-	createAt = time.Parse()	
+)
+func GitHub_to_PipelineEvent(
+	payload github_webhook.WorkflowRunPayload ,
+)(models.PipelineEvent, error){
+	createdAt , err := time.Parse(time.RFC3339,payload.WorkflowRun.CreatedAt);
+	if err != nil {
+		return models.PipelineEvent{}, err ;
+	}
+	updatedAt , err := time.Parse(time.RFC3339,payload.WorkflowRun.UpdatedAt);
+	if err != nil {
+		return models.PipelineEvent{}, err ;
+	}
+	conclusion := "Default_value"
+	if payload.WorkflowRun.Conclusion != nil {
+		conclusion = *payload.WorkflowRun.Conclusion
+	}
+	// mapping  it dude 
+	return models.PipelineEvent{
+		Provider:     "github",
+		Repository:   payload.Repository.FullName,
+		WorkflowID:   payload.WorkflowRun.WorkflowID,
+		RunNumber:    payload.WorkflowRun.RunNumber,
+		RunAttempt:   payload.WorkflowRun.RunAttempt,
+		WorkflowName: payload.WorkflowRun.Name,
+		Branch:       payload.WorkflowRun.HeadBranch,
+		CommitSHA:    payload.WorkflowRun.HeadSHA,
+		Event:        payload.WorkflowRun.Event,
+		Status:       payload.WorkflowRun.Status,
+		Conclusion:   conclusion,
+		JobsURL:      payload.WorkflowRun.JobsURL,
+		LogsURL:      payload.WorkflowRun.LogsURL,
+		HTMLURL:      payload.WorkflowRun.HTMLURL,
+		CreatedAt:    createdAt,
+		UpdatedAt:    updatedAt,
+	}, nil
+
 }

@@ -51,5 +51,6 @@ func HandleGitHubWebHook(ctx *gin.Context) {
 	}
 	fmt.Println("Pipeline Event: ", pipelineEvent)
 
+	
 	ctx.String(http.StatusOK, "OK")
 }

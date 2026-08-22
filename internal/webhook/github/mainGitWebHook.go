@@ -6,13 +6,13 @@ import (
 	"io"
 	"log"
 	"net/http"
+
 	"github.com/gin-gonic/gin"
-	
 )
 
 func HandleGitHubWebHook(ctx *gin.Context) {
 
-	// Read request body
+	// read the  request body
 	body, err := io.ReadAll(ctx.Request.Body)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
@@ -21,14 +21,16 @@ func HandleGitHubWebHook(ctx *gin.Context) {
 		return
 	}
 
-	// Print raw JSON (for debugging)
+	// incoming raw json 
 	fmt.Println(string(body))
-	
 
-	// Verify GitHub Signature
+	// github signature verification
 	if !VerifySignature(ctx, body) {
 		log.Println("Invalid in verifying the signature")
-		return 		
+		ctx.JSON(http.StatusUnauthorized, gin.H{
+			"error": "invalid signature",
+		})
+		return
 	}
 
 	// Unmarshal JSON
@@ -41,19 +43,36 @@ func HandleGitHubWebHook(ctx *gin.Context) {
 		return
 	}
 
-	// turn into the json payload 
-	pipelineEvent , err := GitHub_to_PipelineEvent(payload)
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest,gin.H{
-			"Error":"failed to convert GitHub payload",
+	// completed work flow  send further 
+	if payload.WorkflowRun.Status != "completed" {
+		ctx.JSON(http.StatusAccepted, gin.H{
+			"status": "ignored",
+			"reason": "workflow is not completed",
 		})
-		return 
+		return
 	}
-	fmt.Println("Pipeline Event: ", pipelineEvent)
 
+	// only send the  failure json other wise ignore it 
+	if payload.WorkflowRun.Conclusion == nil ||
+		*payload.WorkflowRun.Conclusion != "failure" {
 
+		ctx.JSON(http.StatusAccepted, gin.H{
+			"status": "ignored",
+			"reason": "workflow did not fail",
+		})
+		return
+	}
 
+	//  convert the 
+	pipelineEvent, err := GitHub_to_PipelineEvent(payload)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"error": "failed to convert GitHub payload",
+		})
+		return
+	}
 
-	
+	fmt.Println("Pipeline Event:", pipelineEvent)
+
 	ctx.String(http.StatusOK, "OK")
 }

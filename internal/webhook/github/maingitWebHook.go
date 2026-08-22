@@ -6,7 +6,6 @@ import (
 	"io"
 	"log"
 	"net/http"
-	"Pipeline-Auditor/internal/wrapper"
 	"github.com/gin-gonic/gin"
 	
 )
@@ -43,7 +42,7 @@ func HandleGitHubWebHook(ctx *gin.Context) {
 	}
 
 	// turn into the json payload 
-	pipelineEvent , err := wrapper.GitHub_to_PipelineEvent(payload)
+	pipelineEvent , err := GitHub_to_PipelineEvent(payload)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest,gin.H{
 			"Error":"failed to convert GitHub payload",

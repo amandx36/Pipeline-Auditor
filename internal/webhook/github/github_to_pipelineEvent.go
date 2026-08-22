@@ -1,12 +1,10 @@
-package wrapper 
+package github_webhook 
 import (
 	"time"
-	github_webhook "Pipeline-Auditor/internal/webhook/github"
 	"Pipeline-Auditor/internal/models"
-
 )
 func GitHub_to_PipelineEvent(
-	payload github_webhook.WorkflowRunPayload ,
+	payload WorkflowRunPayload ,
 )(models.PipelineEvent, error){
 	createdAt , err := time.Parse(time.RFC3339,payload.WorkflowRun.CreatedAt);
 	if err != nil {

@@ -6,8 +6,9 @@ import (
 	"io"
 	"log"
 	"net/http"
-
+	"Pipeline-Auditor/internal/wrapper"
 	"github.com/gin-gonic/gin"
+	
 )
 
 func HandleGitHubWebHook(ctx *gin.Context) {
@@ -23,6 +24,7 @@ func HandleGitHubWebHook(ctx *gin.Context) {
 
 	// Print raw JSON (for debugging)
 	fmt.Println(string(body))
+	
 
 	// Verify GitHub Signature
 	if !VerifySignature(ctx, body) {
@@ -40,15 +42,15 @@ func HandleGitHubWebHook(ctx *gin.Context) {
 		return
 	}
 
-	fmt.Println("GitHub Workflow ")
-	fmt.Println("Action      :", payload.Action)
-	fmt.Println("Run ID      :", payload.WorkflowRun.ID)
-	fmt.Println("Status      :", payload.WorkflowRun.Status)
-	fmt.Println("Conclusion  :", payload.WorkflowRun.Conclusion)
-	fmt.Println("Jobs URL    :", payload.WorkflowRun.JobsURL)
-	fmt.Println("Logs URL    :", payload.WorkflowRun.LogsURL)
-	fmt.Println("Repository  :", payload.Repository.FullName)
+	// turn into the json payload 
+	pipelineEvent , err := wrapper.GitHub_to_PipelineEvent(payload)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest,gin.H{
+			"Error":"failed to convert GitHub payload",
+		})
+		return 
+	}
+	fmt.Println("Pipeline Event: ", pipelineEvent)
 
-	
 	ctx.String(http.StatusOK, "OK")
 }

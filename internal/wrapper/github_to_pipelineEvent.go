@@ -16,7 +16,7 @@ func GitHub_to_PipelineEvent(
 	if err != nil {
 		return models.PipelineEvent{}, err ;
 	}
-	conclusion := "Default_value"
+	conclusion := ""
 	if payload.WorkflowRun.Conclusion != nil {
 		conclusion = *payload.WorkflowRun.Conclusion
 	}

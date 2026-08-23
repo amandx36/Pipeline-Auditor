@@ -1,0 +1,104 @@
+package github_webhook
+
+import (
+	
+	"Pipeline-Auditor/internal/storage/postgres"
+	"database/sql"
+	"encoding/json"
+	"fmt"
+	"io"
+	"log"
+	"net/http"
+
+	"github.com/gin-gonic/gin"
+)
+
+func HandleGitHubWebHook(ctx *gin.Context, db *sql.DB) {
+
+	// read the  request body
+	body, err := io.ReadAll(ctx.Request.Body)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"error": "unable to read request body",
+		})
+		return
+	}
+
+	// incoming raw json 
+	fmt.Println(string(body))
+
+	// github signature verification
+	if !VerifySignature(ctx, body) {
+		log.Println("Invalid in verifying the signature")
+		ctx.JSON(http.StatusUnauthorized, gin.H{
+			"error": "invalid signature",
+		})
+		return
+	}
+	// achieve the idempotency 
+	deliveryId := ctx.GetHeader("X-GitHub-Delivery");
+	if deliveryId == "" {
+	ctx.JSON(http.StatusBadRequest, gin.H{
+		"error": "missing X-GitHub-Delivery",
+	})
+	return
+	} 
+	deliveryStore := postgres.NewDeliveryStore(db)
+	isNew , err := deliveryStore.TryCreate(ctx.Request.Context(),deliveryId)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError,gin.H{
+			"status":"failed idempotency check",
+		})
+		return 
+	}
+	if !isNew{
+		ctx.JSON(http.StatusAccepted,gin.H{
+			"status":"duplicate",	
+		})
+		return 
+	}
+
+
+	// Unmarshal JSON
+	var payload WorkflowRunPayload
+
+	if err := json.Unmarshal(body, &payload); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"error": "invalid payload",
+		})
+		return
+	}
+
+	// completed work flow  send further 
+	if payload.WorkflowRun.Status != "completed" {
+		ctx.JSON(http.StatusAccepted, gin.H{
+			"status": "ignored",
+			"reason": "workflow is not completed",
+		})
+		return
+	}
+
+	// only send the  failure json other wise ignore it 
+	if payload.WorkflowRun.Conclusion == nil ||
+		*payload.WorkflowRun.Conclusion != "failure" {
+
+		ctx.JSON(http.StatusAccepted, gin.H{
+			"status": "ignored",
+			"reason": "workflow did not fail",
+		})
+		return
+	}
+
+	//  convert the 
+	pipelineEvent, err := GitHub_to_PipelineEvent(payload)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"error": "failed to convert GitHub payload",
+		})
+		return
+	}
+
+	fmt.Println("Pipeline Event:", pipelineEvent)
+
+	ctx.String(http.StatusOK, "OK")
+}

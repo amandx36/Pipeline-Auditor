@@ -58,7 +58,7 @@ fmt.Println("Signature Match  :", hmac.Equal(
 	[]byte(GitHUbSignature),
 ))
 fmt.Println("===================================")
-	log.Println("Signature Verified Successfully")
+	log.Println("Signature Verified Successfully  ")
 
 	return true
 }

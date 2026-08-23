@@ -1,17 +1,16 @@
 package main
-
 import (
-	"log"
-	"net/http"
-	"database/sql"
-	"os"
+    "database/sql"
+    "log"
+    "net/http"
+    "os"
 
-	github_webhook "Pipeline-Auditor/internal/webhook/github"
+    github_webhook "Pipeline-Auditor/internal/webhook/github"
 
-	"github.com/gin-gonic/gin"
-	"github.com/joho/godotenv"
+    "github.com/gin-gonic/gin"
+    "github.com/joho/godotenv"
+    _ "github.com/jackc/pgx/v5/stdlib"
 )
-
 func main() {
 
 	router := gin.Default()

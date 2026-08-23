@@ -1,6 +1,9 @@
 package github_webhook
 
 import (
+	
+	"Pipeline-Auditor/internal/storage/postgres"
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -10,7 +13,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func HandleGitHubWebHook(ctx *gin.Context) {
+func HandleGitHubWebHook(ctx *gin.Context, db *sql.DB) {
 
 	// read the  request body
 	body, err := io.ReadAll(ctx.Request.Body)
@@ -32,6 +35,29 @@ func HandleGitHubWebHook(ctx *gin.Context) {
 		})
 		return
 	}
+	// achieve the idempotency 
+	deliveryId := ctx.GetHeader("X-GitHub-Delivery");
+	if deliveryId == "" {
+	ctx.JSON(http.StatusBadRequest, gin.H{
+		"error": "missing X-GitHub-Delivery",
+	})
+	return
+	} 
+	deliveryStore := postgres.NewDeliveryStore(db)
+	isNew , err := deliveryStore.TryCreate(ctx.Request.Context(),deliveryId)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError,gin.H{
+			"status":"failed idempotency check",
+		})
+		return 
+	}
+	if !isNew{
+		ctx.JSON(http.StatusAccepted,gin.H{
+			"status":"duplicate",	
+		})
+		return 
+	}
+
 
 	// Unmarshal JSON
 	var payload WorkflowRunPayload

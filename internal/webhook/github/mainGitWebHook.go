@@ -2,7 +2,7 @@ package github_webhook
 
 import (
 	
-	"Pipeline-Auditor/internal/storage/postgres"
+	"github.com/amandx36/Pipeline-Auditor/internal/storage/postgres"
 	"database/sql"
 	"encoding/json"
 	"fmt"

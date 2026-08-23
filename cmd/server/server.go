@@ -5,7 +5,7 @@ import (
     "net/http"
     "os"
 
-    github_webhook "Pipeline-Auditor/internal/webhook/github"
+    github_webhook "github.com/amandx36/Pipeline-Auditor/internal/webhook/github"
 
     "github.com/gin-gonic/gin"
     "github.com/joho/godotenv"

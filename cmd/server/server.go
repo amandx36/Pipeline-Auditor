@@ -1,34 +1,35 @@
 package main
+
 import (
-    "database/sql"
-    "log"
-    "net/http"
-    "os"
+	"database/sql"
+	"log"
+	"net/http"
+	"os"
 
-    github_webhook "github.com/amandx36/Pipeline-Auditor/internal/webhook/github"
+	github_webhook "github.com/amandx36/Pipeline-Auditor/internal/webhook/github"
 
-    "github.com/gin-gonic/gin"
-    "github.com/joho/godotenv"
-    _ "github.com/jackc/pgx/v5/stdlib"
+	"github.com/gin-gonic/gin"
+	_ "github.com/jackc/pgx/v5/stdlib"
+	"github.com/joho/godotenv"
 )
+
 func main() {
 
 	router := gin.Default()
 	err := godotenv.Load()
 
-
 	if err != nil {
-		log.Println("Error while loading the env",err)
+		log.Println("Error while loading the env", err)
 	}
 
 	router.GET("/ping", Pong)
-	// connecting to he database 
+	// connecting to he database
 	db, err := sql.Open("pgx", os.Getenv("DATABASE_URL"))
 	if err != nil {
 		log.Fatal("Failed to connect database:", err)
 	}
-	// make the anonymis function 
-	router.POST("/webhook/github",  func(ctx *gin.Context) {
+	// make the anonymis function
+	router.POST("/webhook/github", func(ctx *gin.Context) {
 		github_webhook.HandleGitHubWebHook(ctx, db)
 	})
 

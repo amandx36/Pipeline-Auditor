@@ -1,8 +1,6 @@
 package github_webhook
 
 import (
-	
-	"github.com/amandx36/Pipeline-Auditor/internal/storage/postgres"
 	"database/sql"
 	"encoding/json"
 	"fmt"
@@ -10,6 +8,8 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/amandx36/Pipeline-Auditor/internal/client"
+	"github.com/amandx36/Pipeline-Auditor/internal/storage/postgres"
 	"github.com/gin-gonic/gin"
 )
 
@@ -24,7 +24,7 @@ func HandleGitHubWebHook(ctx *gin.Context, db *sql.DB) {
 		return
 	}
 
-	// incoming raw json 
+	// incoming raw json
 	fmt.Println(string(body))
 
 	// github signature verification
@@ -35,29 +35,28 @@ func HandleGitHubWebHook(ctx *gin.Context, db *sql.DB) {
 		})
 		return
 	}
-	// achieve the idempotency 
-	deliveryId := ctx.GetHeader("X-GitHub-Delivery");
+	// achieve the idempotency
+	deliveryId := ctx.GetHeader("X-GitHub-Delivery")
 	if deliveryId == "" {
-	ctx.JSON(http.StatusBadRequest, gin.H{
-		"error": "missing X-GitHub-Delivery",
-	})
-	return
-	} 
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"error": "missing X-GitHub-Delivery",
+		})
+		return
+	}
 	deliveryStore := postgres.NewDeliveryStore(db)
-	isNew , err := deliveryStore.TryCreate(ctx.Request.Context(),deliveryId)
+	isNew, err := deliveryStore.TryCreate(ctx.Request.Context(), deliveryId)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError,gin.H{
-			"status":"failed idempotency check",
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"status": "failed idempotency check",
 		})
-		return 
+		return
 	}
-	if !isNew{
-		ctx.JSON(http.StatusAccepted,gin.H{
-			"status":"duplicate",	
+	if !isNew {
+		ctx.JSON(http.StatusAccepted, gin.H{
+			"status": "duplicate",
 		})
-		return 
+		return
 	}
-
 
 	// Unmarshal JSON
 	var payload WorkflowRunPayload
@@ -69,7 +68,7 @@ func HandleGitHubWebHook(ctx *gin.Context, db *sql.DB) {
 		return
 	}
 
-	// completed work flow  send further 
+	// completed work flow  send further
 	if payload.WorkflowRun.Status != "completed" {
 		ctx.JSON(http.StatusAccepted, gin.H{
 			"status": "ignored",
@@ -78,7 +77,7 @@ func HandleGitHubWebHook(ctx *gin.Context, db *sql.DB) {
 		return
 	}
 
-	// only send the  failure json other wise ignore it 
+	// only send the  failure json other wise ignore it
 	if payload.WorkflowRun.Conclusion == nil ||
 		*payload.WorkflowRun.Conclusion != "failure" {
 
@@ -89,7 +88,7 @@ func HandleGitHubWebHook(ctx *gin.Context, db *sql.DB) {
 		return
 	}
 
-	//  convert the 
+	//  convert the
 	pipelineEvent, err := GitHub_to_PipelineEvent(payload)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
@@ -99,6 +98,18 @@ func HandleGitHubWebHook(ctx *gin.Context, db *sql.DB) {
 	}
 
 	fmt.Println("Pipeline Event:", pipelineEvent)
+
+	response, err := client.CollectLogs(pipelineEvent)
+	if err != nil {
+		log.Printf("gRPC CollectLogs failed: %v", err)
+		ctx.JSON(http.StatusFailedDependency, gin.H{
+			"error": "log collection request failed",
+		})
+		return
+	}
+	if response != nil {
+		log.Printf("CI-LogCollector response: success=%t message=%s", response.GetSuccess(), response.GetMessage())
+	}
 
 	ctx.String(http.StatusOK, "OK")
 }

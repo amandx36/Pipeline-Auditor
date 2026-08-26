@@ -8,8 +8,10 @@ message PipelineEvent {
     string provider = 1;
     string repository = 2;
     string pipeline_id = 3;
-    int32 run_number = 4;
-    int32 run_attempt = 5;
+
+    uint64 run_number = 4;
+    uint32 run_attempt = 5;
+
     string pipeline_name = 6;
     string branch = 7;
     string commit_sha = 8;
@@ -25,8 +27,9 @@ message CollectLogsRequest {
 }
 
 message CollectLogsResponse {
-    bool success = 1;
-    string message = 2;
+    bool accepted = 1;
+    string collection_id = 2;
+    string message = 3;
 }
 
 service LogCollector {

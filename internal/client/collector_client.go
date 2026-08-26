@@ -2,6 +2,8 @@ package client
 
 import (
 	"context"
+	"fmt"
+	"log"
 	"os"
 	"strings"
 	"sync"
@@ -16,9 +18,8 @@ import (
 const collectorAddressEnvKey = "CI_LOG_COLLECTOR_ADDR"
 
 var (
-	clientOnce      sync.Once
-	sharedClient    *Client
-	sharedClientErr error
+	clientMu     sync.Mutex
+	sharedClient *Client
 )
 
 type Client struct {
@@ -28,23 +29,38 @@ type Client struct {
 
 func collectorAddress() string {
 	addr := strings.TrimSpace(os.Getenv(collectorAddressEnvKey))
+
 	if addr == "" {
 		return "localhost:50051"
 	}
+
 	return addr
 }
 
 func newClient() (*Client, error) {
 	address := collectorAddress()
+
+	log.Printf("[PIPELINE-AUDITOR] Connecting to CI-LogCollector at %s", address)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
 	conn, err := grpc.DialContext(
-		context.Background(),
+		ctx,
 		address,
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 		grpc.WithBlock(),
 	)
 	if err != nil {
+		log.Printf(
+			"[PIPELINE-AUDITOR] Failed to connect to CI-LogCollector at %s: %v",
+			address,
+			err,
+		)
 		return nil, err
 	}
+
+	log.Printf("[PIPELINE-AUDITOR] Connected to CI-LogCollector at %s", address)
 
 	return &Client{
 		conn:   conn,
@@ -53,21 +69,39 @@ func newClient() (*Client, error) {
 }
 
 func GetClient() (*Client, error) {
-	clientOnce.Do(func() {
-		sharedClient, sharedClientErr = newClient()
-	})
-	return sharedClient, sharedClientErr
+	clientMu.Lock()
+	defer clientMu.Unlock()
+
+	if sharedClient != nil && sharedClient.conn != nil {
+		return sharedClient, nil
+	}
+
+	// Do not cache connection failures. The collector may be started after
+	// Pipeline-Auditor, and the next webhook must be able to retry.
+	client, err := newClient()
+	if err != nil {
+		return nil, err
+	}
+
+	sharedClient = client
+	return sharedClient, nil
 }
 
 func (c *Client) Close() error {
 	if c == nil || c.conn == nil {
 		return nil
 	}
+
 	return c.conn.Close()
 }
 
-func toProtoPipelineEvent(event models.PipelineEvent) *collectorpb.PipelineEvent {
-	if event.Provider == "" && event.Repository == "" && event.PipelineID == "" {
+func toProtoPipelineEvent(
+	event models.PipelineEvent,
+) *collectorpb.PipelineEvent {
+
+	if event.Provider == "" &&
+		event.Repository == "" &&
+		event.PipelineID == "" {
 		return nil
 	}
 
@@ -75,8 +109,8 @@ func toProtoPipelineEvent(event models.PipelineEvent) *collectorpb.PipelineEvent
 		Provider:     event.Provider,
 		Repository:   event.Repository,
 		PipelineId:   event.PipelineID,
-		RunNumber:    int32(event.RunNumber),
-		RunAttempt:   int32(event.RunAttempt),
+		RunNumber:    uint64(event.RunNumber),
+		RunAttempt:   uint32(event.RunAttempt),
 		PipelineName: event.PipelineName,
 		Branch:       event.Branch,
 		CommitSha:    event.CommitSHA,
@@ -88,28 +122,61 @@ func toProtoPipelineEvent(event models.PipelineEvent) *collectorpb.PipelineEvent
 	}
 }
 
-func (c *Client) CollectLogs(event models.PipelineEvent) (*collectorpb.CollectLogsResponse, error) {
+func (c *Client) CollectLogs(
+	event models.PipelineEvent,
+) (*collectorpb.CollectLogsResponse, error) {
+
 	if c == nil || c.client == nil {
 		return nil, grpc.ErrClientConnClosing
 	}
 
-	request := &collectorpb.CollectLogsRequest{
-		Pipeline: toProtoPipelineEvent(event),
-	}
-	if request.Pipeline == nil {
-		return nil, nil
+	pipeline := toProtoPipelineEvent(event)
+
+	if pipeline == nil {
+		return nil, fmt.Errorf("pipeline event is empty")
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	request := &collectorpb.CollectLogsRequest{
+		Pipeline: pipeline,
+	}
+
+	log.Printf(
+		"[PIPELINE-AUDITOR] Sending CollectLogs RPC: provider=%s repository=%s pipeline_id=%s",
+		pipeline.GetProvider(),
+		pipeline.GetRepository(),
+		pipeline.GetPipelineId(),
+	)
+
+	ctx, cancel := context.WithTimeout(
+		context.Background(),
+		10*time.Second,
+	)
 	defer cancel()
 
-	return c.client.CollectLogs(ctx, request)
+	response, err := c.client.CollectLogs(ctx, request)
+
+	if err != nil {
+		log.Printf("[PIPELINE-AUDITOR] CollectLogs RPC failed: %v", err)
+		return nil, err
+	}
+
+	log.Printf(
+		"[PIPELINE-AUDITOR] CollectLogs RPC succeeded: accepted=%t collection_id=%s message=%s",
+		response.GetAccepted(),
+		response.GetCollectionId(),
+		response.GetMessage(),
+	)
+
+	return response, nil
 }
 
-func CollectLogs(event models.PipelineEvent) (*collectorpb.CollectLogsResponse, error) {
+func CollectLogs(
+	event models.PipelineEvent,
+) (*collectorpb.CollectLogsResponse, error) {
 	client, err := GetClient()
 	if err != nil {
 		return nil, err
 	}
+
 	return client.CollectLogs(event)
 }

@@ -1,32 +1,33 @@
 package github_webhook
+
 type WorkflowRunPayload struct {
-	Action      string       `json:"action"`
-	WorkflowRun WorkflowRun  `json:"workflow_run"`
-	Repository  Repository   `json:"repository"`
+	Action      string      `json:"action"`
+	WorkflowRun WorkflowRun `json:"workflow_run"`
+	Repository  Repository  `json:"repository"`
 }
 
 type WorkflowRun struct {
-	ID          int64   `json:"id"`
-	WorkflowID  int64   `json:"workflow_id"`
+	ID         int64 `json:"id"`
+	WorkflowID int64 `json:"workflow_id"`
 
-	RunNumber   int     `json:"run_number"`
-	RunAttempt  int     `json:"run_attempt"`
+	RunNumber  int `json:"run_number"`
+	RunAttempt int `json:"run_attempt"`
 
-	Name        string  `json:"name"`
-	Event       string  `json:"event"`
+	Name  string `json:"name"`
+	Event string `json:"event"`
 
-	HeadBranch  string  `json:"head_branch"`
-	HeadSHA     string  `json:"head_sha"`
+	HeadBranch string `json:"head_branch"`
+	HeadSHA    string `json:"head_sha"`
 
-	Status      string  `json:"status"`
-	Conclusion  *string `json:"conclusion"`
+	Status     string  `json:"status"`
+	Conclusion *string `json:"conclusion"`
 
-	JobsURL     string  `json:"jobs_url"`
-	LogsURL     string  `json:"logs_url"`
-	HTMLURL     string  `json:"html_url"`
+	JobsURL string `json:"jobs_url"`
+	LogsURL string `json:"logs_url"`
+	HTMLURL string `json:"html_url"`
 
-	CreatedAt   string  `json:"created_at"`
-	UpdatedAt   string  `json:"updated_at"`
+	CreatedAt string `json:"created_at"`
+	UpdatedAt string `json:"updated_at"`
 }
 
 type Repository struct {

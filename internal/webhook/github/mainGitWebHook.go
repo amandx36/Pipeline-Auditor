@@ -99,6 +99,7 @@ func HandleGitHubWebHook(ctx *gin.Context, db *sql.DB) {
 
 	fmt.Println("Pipeline Event:", pipelineEvent)
 
+	log.Println("Sending PipelineEvent to CI-LogCollector")
 	response, err := client.CollectLogs(pipelineEvent)
 	if err != nil {
 		log.Printf("gRPC CollectLogs failed: %v", err)
@@ -108,7 +109,12 @@ func HandleGitHubWebHook(ctx *gin.Context, db *sql.DB) {
 		return
 	}
 	if response != nil {
-		log.Printf("CI-LogCollector response: success=%t message=%s", response.GetMessage())
+		log.Printf(
+			"CI-LogCollector response: accepted=%t collection_id=%s message=%s",
+			response.GetAccepted(),
+			response.GetCollectionId(),
+			response.GetMessage(),
+		)
 	}
 
 	ctx.String(http.StatusOK, "OK")

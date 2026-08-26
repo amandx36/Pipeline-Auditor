@@ -6,10 +6,10 @@ import (
 	"encoding/hex"
 	"fmt"
 
-	"github.com/gin-gonic/gin"
 	"log"
 	"net/http"
 	"os"
+		"github.com/gin-gonic/gin"
 )
 
 func VerifySignature(ctx *gin.Context, body []byte) bool {

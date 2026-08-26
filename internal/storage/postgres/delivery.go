@@ -24,11 +24,11 @@ func (s *DeliveryStore) TryCreate(
 	var insertedID string
 
 	err := s.DB.QueryRowContext(ctx, `
-        INSERT INTO webhook_deliveries (delivery_id)
-        VALUES ($1)
-        ON CONFLICT (delivery_id) DO NOTHING
-        RETURNING delivery_id
-    `, deliveryID).Scan(&insertedID)
+	    INSERT INTO webhook_deliveries (delivery_id)
+	    VALUES ($1)
+	    ON CONFLICT (delivery_id) DO NOTHING
+	    RETURNING delivery_id
+	`, deliveryID).Scan(&insertedID)
 
 	if err == sql.ErrNoRows {
 		// Delivery already exists.

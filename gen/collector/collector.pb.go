@@ -2,7 +2,7 @@
 // versions:
 // 	protoc-gen-go v1.36.11
 // 	protoc        v7.35.1
-// source: collector/collector.proto
+// source: proto/collector/collector.proto
 
 package collector
 
@@ -42,7 +42,7 @@ type PipelineEvent struct {
 
 func (x *PipelineEvent) Reset() {
 	*x = PipelineEvent{}
-	mi := &file_collector_collector_proto_msgTypes[0]
+	mi := &file_proto_collector_collector_proto_msgTypes[0]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -54,7 +54,7 @@ func (x *PipelineEvent) String() string {
 func (*PipelineEvent) ProtoMessage() {}
 
 func (x *PipelineEvent) ProtoReflect() protoreflect.Message {
-	mi := &file_collector_collector_proto_msgTypes[0]
+	mi := &file_proto_collector_collector_proto_msgTypes[0]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -67,7 +67,7 @@ func (x *PipelineEvent) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PipelineEvent.ProtoReflect.Descriptor instead.
 func (*PipelineEvent) Descriptor() ([]byte, []int) {
-	return file_collector_collector_proto_rawDescGZIP(), []int{0}
+	return file_proto_collector_collector_proto_rawDescGZIP(), []int{0}
 }
 
 func (x *PipelineEvent) GetProvider() string {
@@ -170,7 +170,7 @@ type CollectLogsRequest struct {
 
 func (x *CollectLogsRequest) Reset() {
 	*x = CollectLogsRequest{}
-	mi := &file_collector_collector_proto_msgTypes[1]
+	mi := &file_proto_collector_collector_proto_msgTypes[1]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -182,7 +182,7 @@ func (x *CollectLogsRequest) String() string {
 func (*CollectLogsRequest) ProtoMessage() {}
 
 func (x *CollectLogsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_collector_collector_proto_msgTypes[1]
+	mi := &file_proto_collector_collector_proto_msgTypes[1]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -195,7 +195,7 @@ func (x *CollectLogsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CollectLogsRequest.ProtoReflect.Descriptor instead.
 func (*CollectLogsRequest) Descriptor() ([]byte, []int) {
-	return file_collector_collector_proto_rawDescGZIP(), []int{1}
+	return file_proto_collector_collector_proto_rawDescGZIP(), []int{1}
 }
 
 func (x *CollectLogsRequest) GetPipeline() *PipelineEvent {
@@ -216,7 +216,7 @@ type CollectLogsResponse struct {
 
 func (x *CollectLogsResponse) Reset() {
 	*x = CollectLogsResponse{}
-	mi := &file_collector_collector_proto_msgTypes[2]
+	mi := &file_proto_collector_collector_proto_msgTypes[2]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -228,7 +228,7 @@ func (x *CollectLogsResponse) String() string {
 func (*CollectLogsResponse) ProtoMessage() {}
 
 func (x *CollectLogsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_collector_collector_proto_msgTypes[2]
+	mi := &file_proto_collector_collector_proto_msgTypes[2]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -241,7 +241,7 @@ func (x *CollectLogsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CollectLogsResponse.ProtoReflect.Descriptor instead.
 func (*CollectLogsResponse) Descriptor() ([]byte, []int) {
-	return file_collector_collector_proto_rawDescGZIP(), []int{2}
+	return file_proto_collector_collector_proto_rawDescGZIP(), []int{2}
 }
 
 func (x *CollectLogsResponse) GetAccepted() bool {
@@ -265,11 +265,11 @@ func (x *CollectLogsResponse) GetMessage() string {
 	return ""
 }
 
-var File_collector_collector_proto protoreflect.FileDescriptor
+var File_proto_collector_collector_proto protoreflect.FileDescriptor
 
-const file_collector_collector_proto_rawDesc = "" +
+const file_proto_collector_collector_proto_rawDesc = "" +
 	"\n" +
-	"\x19collector/collector.proto\x12\tcollector\"\x8c\x03\n" +
+	"\x1fproto/collector/collector.proto\x12\tcollector\"\x8c\x03\n" +
 	"\rPipelineEvent\x12\x1a\n" +
 	"\bprovider\x18\x01 \x01(\tR\bprovider\x12\x1e\n" +
 	"\n" +
@@ -303,24 +303,24 @@ const file_collector_collector_proto_rawDesc = "" +
 	"\vCollectLogs\x12\x1d.collector.CollectLogsRequest\x1a\x1e.collector.CollectLogsResponseB4Z2github.com/amandx36/Pipeline-Auditor/gen/collectorb\x06proto3"
 
 var (
-	file_collector_collector_proto_rawDescOnce sync.Once
-	file_collector_collector_proto_rawDescData []byte
+	file_proto_collector_collector_proto_rawDescOnce sync.Once
+	file_proto_collector_collector_proto_rawDescData []byte
 )
 
-func file_collector_collector_proto_rawDescGZIP() []byte {
-	file_collector_collector_proto_rawDescOnce.Do(func() {
-		file_collector_collector_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_collector_collector_proto_rawDesc), len(file_collector_collector_proto_rawDesc)))
+func file_proto_collector_collector_proto_rawDescGZIP() []byte {
+	file_proto_collector_collector_proto_rawDescOnce.Do(func() {
+		file_proto_collector_collector_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_proto_collector_collector_proto_rawDesc), len(file_proto_collector_collector_proto_rawDesc)))
 	})
-	return file_collector_collector_proto_rawDescData
+	return file_proto_collector_collector_proto_rawDescData
 }
 
-var file_collector_collector_proto_msgTypes = make([]protoimpl.MessageInfo, 3)
-var file_collector_collector_proto_goTypes = []any{
+var file_proto_collector_collector_proto_msgTypes = make([]protoimpl.MessageInfo, 3)
+var file_proto_collector_collector_proto_goTypes = []any{
 	(*PipelineEvent)(nil),       // 0: collector.PipelineEvent
 	(*CollectLogsRequest)(nil),  // 1: collector.CollectLogsRequest
 	(*CollectLogsResponse)(nil), // 2: collector.CollectLogsResponse
 }
-var file_collector_collector_proto_depIdxs = []int32{
+var file_proto_collector_collector_proto_depIdxs = []int32{
 	0, // 0: collector.CollectLogsRequest.pipeline:type_name -> collector.PipelineEvent
 	1, // 1: collector.LogCollector.CollectLogs:input_type -> collector.CollectLogsRequest
 	2, // 2: collector.LogCollector.CollectLogs:output_type -> collector.CollectLogsResponse
@@ -331,26 +331,26 @@ var file_collector_collector_proto_depIdxs = []int32{
 	0, // [0:1] is the sub-list for field type_name
 }
 
-func init() { file_collector_collector_proto_init() }
-func file_collector_collector_proto_init() {
-	if File_collector_collector_proto != nil {
+func init() { file_proto_collector_collector_proto_init() }
+func file_proto_collector_collector_proto_init() {
+	if File_proto_collector_collector_proto != nil {
 		return
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
-			RawDescriptor: unsafe.Slice(unsafe.StringData(file_collector_collector_proto_rawDesc), len(file_collector_collector_proto_rawDesc)),
+			RawDescriptor: unsafe.Slice(unsafe.StringData(file_proto_collector_collector_proto_rawDesc), len(file_proto_collector_collector_proto_rawDesc)),
 			NumEnums:      0,
 			NumMessages:   3,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
-		GoTypes:           file_collector_collector_proto_goTypes,
-		DependencyIndexes: file_collector_collector_proto_depIdxs,
-		MessageInfos:      file_collector_collector_proto_msgTypes,
+		GoTypes:           file_proto_collector_collector_proto_goTypes,
+		DependencyIndexes: file_proto_collector_collector_proto_depIdxs,
+		MessageInfos:      file_proto_collector_collector_proto_msgTypes,
 	}.Build()
-	File_collector_collector_proto = out.File
-	file_collector_collector_proto_goTypes = nil
-	file_collector_collector_proto_depIdxs = nil
+	File_proto_collector_collector_proto = out.File
+	file_proto_collector_collector_proto_goTypes = nil
+	file_proto_collector_collector_proto_depIdxs = nil
 }

@@ -37,8 +37,6 @@ func collectorAddress() string {
 	return addr
 }
 
-
-
 func newClient() (*Client, error) {
 	address := collectorAddress()
 
@@ -175,7 +173,6 @@ func (c *Client) CollectLogs(
 func CollectLogs(
 	event models.PipelineEvent,
 ) (*collectorpb.CollectLogsResponse, error) {
-
 	client, err := GetClient()
 	if err != nil {
 		return nil, err

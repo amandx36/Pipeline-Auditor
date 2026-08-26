@@ -108,7 +108,7 @@ func HandleGitHubWebHook(ctx *gin.Context, db *sql.DB) {
 		return
 	}
 	if response != nil {
-		log.Printf("CI-LogCollector response: success=%t message=%s", response.GetSuccess(), response.GetMessage())
+		log.Printf("CI-LogCollector response: success=%t message=%s", response.GetMessage())
 	}
 
 	ctx.String(http.StatusOK, "OK")

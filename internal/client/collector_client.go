@@ -18,9 +18,8 @@ import (
 const collectorAddressEnvKey = "CI_LOG_COLLECTOR_ADDR"
 
 var (
-	clientOnce      sync.Once
-	sharedClient    *Client
-	sharedClientErr error
+	clientMu     sync.Mutex
+	sharedClient *Client
 )
 
 type Client struct {
@@ -41,7 +40,7 @@ func collectorAddress() string {
 func newClient() (*Client, error) {
 	address := collectorAddress()
 
-	log.Printf("Connecting to CI-LogCollector at %s", address)
+	log.Printf("[PIPELINE-AUDITOR] Connecting to CI-LogCollector at %s", address)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
@@ -54,14 +53,14 @@ func newClient() (*Client, error) {
 	)
 	if err != nil {
 		log.Printf(
-			"Failed to connect to CI-LogCollector at %s: %v",
+			"[PIPELINE-AUDITOR] Failed to connect to CI-LogCollector at %s: %v",
 			address,
 			err,
 		)
 		return nil, err
 	}
 
-	log.Printf("Connected to CI-LogCollector at %s", address)
+	log.Printf("[PIPELINE-AUDITOR] Connected to CI-LogCollector at %s", address)
 
 	return &Client{
 		conn:   conn,
@@ -70,11 +69,22 @@ func newClient() (*Client, error) {
 }
 
 func GetClient() (*Client, error) {
-	clientOnce.Do(func() {
-		sharedClient, sharedClientErr = newClient()
-	})
+	clientMu.Lock()
+	defer clientMu.Unlock()
 
-	return sharedClient, sharedClientErr
+	if sharedClient != nil && sharedClient.conn != nil {
+		return sharedClient, nil
+	}
+
+	// Do not cache connection failures. The collector may be started after
+	// Pipeline-Auditor, and the next webhook must be able to retry.
+	client, err := newClient()
+	if err != nil {
+		return nil, err
+	}
+
+	sharedClient = client
+	return sharedClient, nil
 }
 
 func (c *Client) Close() error {
@@ -131,7 +141,7 @@ func (c *Client) CollectLogs(
 	}
 
 	log.Printf(
-		"Sending CollectLogs RPC: provider=%s repository=%s pipeline_id=%s",
+		"[PIPELINE-AUDITOR] Sending CollectLogs RPC: provider=%s repository=%s pipeline_id=%s",
 		pipeline.GetProvider(),
 		pipeline.GetRepository(),
 		pipeline.GetPipelineId(),
@@ -146,12 +156,12 @@ func (c *Client) CollectLogs(
 	response, err := c.client.CollectLogs(ctx, request)
 
 	if err != nil {
-		log.Printf("CollectLogs RPC failed: %v", err)
+		log.Printf("[PIPELINE-AUDITOR] CollectLogs RPC failed: %v", err)
 		return nil, err
 	}
 
 	log.Printf(
-		"CollectLogs RPC succeeded: accepted=%t collection_id=%s message=%s",
+		"[PIPELINE-AUDITOR] CollectLogs RPC succeeded: accepted=%t collection_id=%s message=%s",
 		response.GetAccepted(),
 		response.GetCollectionId(),
 		response.GetMessage(),

@@ -43,6 +43,3 @@ func main() {
 func Pong(ctx *gin.Context) {
 	ctx.String(http.StatusOK, "Pong  hello testing 03 ")
 }
-
-
-

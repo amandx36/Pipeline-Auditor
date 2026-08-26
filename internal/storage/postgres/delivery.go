@@ -1,42 +1,42 @@
 package postgres
 
 import (
-    "context"
-    "database/sql"
+	"context"
+	"database/sql"
 )
 
 type DeliveryStore struct {
-    DB *sql.DB
+	DB *sql.DB
 }
 
-// constructor 
+// constructor
 func NewDeliveryStore(db *sql.DB) *DeliveryStore {
-    return &DeliveryStore{
-        DB: db,
-    }
+	return &DeliveryStore{
+		DB: db,
+	}
 }
 
 func (s *DeliveryStore) TryCreate(
-    ctx context.Context,
-    deliveryID string,
+	ctx context.Context,
+	deliveryID string,
 ) (bool, error) {
 
-    var insertedID string
+	var insertedID string
 
-    err := s.DB.QueryRowContext(ctx, `
+	err := s.DB.QueryRowContext(ctx, `
         INSERT INTO webhook_deliveries (delivery_id)
         VALUES ($1)
         ON CONFLICT (delivery_id) DO NOTHING
         RETURNING delivery_id
     `, deliveryID).Scan(&insertedID)
 
-    if err == sql.ErrNoRows {
-        // Delivery already exists.
-        return false, nil
-    }
+	if err == sql.ErrNoRows {
+		// Delivery already exists.
+		return false, nil
+	}
 
-    if err != nil {
-        return false, err
-    }
-    return true, nil
+	if err != nil {
+		return false, err
+	}
+	return true, nil
 }

@@ -46,12 +46,14 @@ func HandleGitHubWebHook(ctx *gin.Context, db *sql.DB) {
 	deliveryStore := postgres.NewDeliveryStore(db)
 	isNew, err := deliveryStore.TryCreate(ctx.Request.Context(), deliveryId)
 	if err != nil {
+		log.Printf("[PIPELINE-AUDITOR] idempotency check failed for delivery %q: %v", deliveryId, err)
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"status": "failed idempotency check",
 		})
 		return
 	}
 	if !isNew {
+		log.Printf("[PIPELINE-AUDITOR] Webhook ignored: duplicate delivery_id=%q", deliveryId)
 		ctx.JSON(http.StatusAccepted, gin.H{
 			"status": "duplicate",
 		})
@@ -70,6 +72,7 @@ func HandleGitHubWebHook(ctx *gin.Context, db *sql.DB) {
 
 	// completed work flow  send further
 	if payload.WorkflowRun.Status != "completed" {
+		log.Printf("[PIPELINE-AUDITOR] Webhook ignored: workflow status=%q (requires completed)", payload.WorkflowRun.Status)
 		ctx.JSON(http.StatusAccepted, gin.H{
 			"status": "ignored",
 			"reason": "workflow is not completed",
@@ -80,6 +83,11 @@ func HandleGitHubWebHook(ctx *gin.Context, db *sql.DB) {
 	// only send the  failure json other wise ignore it
 	if payload.WorkflowRun.Conclusion == nil ||
 		*payload.WorkflowRun.Conclusion != "failure" {
+		conclusion := ""
+		if payload.WorkflowRun.Conclusion != nil {
+			conclusion = *payload.WorkflowRun.Conclusion
+		}
+		log.Printf("[PIPELINE-AUDITOR] Webhook ignored: workflow conclusion=%q (requires failure)", conclusion)
 
 		ctx.JSON(http.StatusAccepted, gin.H{
 			"status": "ignored",
@@ -99,10 +107,10 @@ func HandleGitHubWebHook(ctx *gin.Context, db *sql.DB) {
 
 	fmt.Println("Pipeline Event:", pipelineEvent)
 
-	log.Println("Sending PipelineEvent to CI-LogCollector")
+	log.Println("[PIPELINE-AUDITOR] Webhook reached CollectLogs; sending PipelineEvent to CI-LogCollector")
 	response, err := client.CollectLogs(pipelineEvent)
 	if err != nil {
-		log.Printf("gRPC CollectLogs failed: %v", err)
+		log.Printf("[PIPELINE-AUDITOR] gRPC CollectLogs failed: %v", err)
 		ctx.JSON(http.StatusFailedDependency, gin.H{
 			"error": "log collection request failed",
 		})
@@ -110,7 +118,7 @@ func HandleGitHubWebHook(ctx *gin.Context, db *sql.DB) {
 	}
 	if response != nil {
 		log.Printf(
-			"CI-LogCollector response: accepted=%t collection_id=%s message=%s",
+			"[PIPELINE-AUDITOR] CI-LogCollector response: accepted=%t collection_id=%s message=%s",
 			response.GetAccepted(),
 			response.GetCollectionId(),
 			response.GetMessage(),

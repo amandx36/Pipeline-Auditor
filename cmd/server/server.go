@@ -41,5 +41,8 @@ func main() {
 }
 
 func Pong(ctx *gin.Context) {
-	ctx.String(http.StatusOK, "Pong  hello user")
+	ctx.String(http.StatusOK, "Pong  hello testing 01 ")
 }
+
+
+

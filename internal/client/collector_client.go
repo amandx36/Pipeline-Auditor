@@ -37,6 +37,8 @@ func collectorAddress() string {
 	return addr
 }
 
+
+
 func newClient() (*Client, error) {
 	address := collectorAddress()
 

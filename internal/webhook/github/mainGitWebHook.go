@@ -46,14 +46,14 @@ func HandleGitHubWebHook(ctx *gin.Context, db *sql.DB) {
 	deliveryStore := postgres.NewDeliveryStore(db)
 	isNew, err := deliveryStore.TryCreate(ctx.Request.Context(), deliveryId)
 	if err != nil {
-		log.Printf("[PIPELINE-AUDITOR] idempotency check failed for delivery %q: %v", deliveryId, err)
+		log.Printf("idempotency check failed for delivery %q: %v", deliveryId, err)
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"status": "failed idempotency check",
 		})
 		return
 	}
 	if !isNew {
-		log.Printf("[PIPELINE-AUDITOR] Webhook ignored: duplicate delivery_id=%q", deliveryId)
+		log.Printf("Webhook ignored: duplicate delivery_id=%q", deliveryId)
 		ctx.JSON(http.StatusAccepted, gin.H{
 			"status": "duplicate",
 		})

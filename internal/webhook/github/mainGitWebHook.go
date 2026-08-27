@@ -108,7 +108,7 @@ func HandleGitHubWebHook(ctx *gin.Context, db *sql.DB) {
 	fmt.Println("Pipeline Event:", pipelineEvent)
 
 	log.Println("[PIPELINE-AUDITOR] Webhook reached CollectLogs; sending PipelineEvent to CI-LogCollector")
-	response, err := client.CollectLogs(pipelineEvent)
+	response, err := client.CollectLogWrapper(pipelineEvent)
 	if err != nil {
 		log.Printf("[PIPELINE-AUDITOR] gRPC CollectLogs failed: %v", err)
 		ctx.JSON(http.StatusFailedDependency, gin.H{

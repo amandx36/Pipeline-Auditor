@@ -9,7 +9,7 @@ import (
 	"net/http"
 
 	"github.com/amandx36/Pipeline-Auditor/internal/client"
-	"github.com/amandx36/Pipeline-Auditor/internal/storage/postgres"
+	// "github.com/amandx36/Pipeline-Auditor/internal/storage/postgres"
 	"github.com/gin-gonic/gin"
 )
 
@@ -28,13 +28,13 @@ func HandleGitHubWebHook(ctx *gin.Context, db *sql.DB) {
 	fmt.Println(string(body))
 
 	// github signature verification
-	if !VerifySignature(ctx, body) {
-		log.Println("Invalid in verifying the signature")
-		ctx.JSON(http.StatusUnauthorized, gin.H{
-			"error": "invalid signature",
-		})
-		return
-	}
+	// if !VerifySignature(ctx, body) {
+	// 	log.Println("Invalid in verifying the signature")
+	// 	ctx.JSON(http.StatusUnauthorized, gin.H{
+	// 		"error": "invalid signature",
+	// 	})
+	// 	return
+	// }
 	// achieve the idempotency
 	deliveryId := ctx.GetHeader("X-GitHub-Delivery")
 	if deliveryId == "" {
@@ -43,22 +43,22 @@ func HandleGitHubWebHook(ctx *gin.Context, db *sql.DB) {
 		})
 		return
 	}
-	deliveryStore := postgres.NewDeliveryStore(db)
-	isNew, err := deliveryStore.TryCreate(ctx.Request.Context(), deliveryId)
-	if err != nil {
-		log.Printf("idempotency check failed for delivery %q: %v", deliveryId, err)
-		ctx.JSON(http.StatusInternalServerError, gin.H{
-			"status": "failed idempotency check",
-		})
-		return
-	}
-	if !isNew {
-		log.Printf("Webhook ignored: duplicate delivery_id=%q", deliveryId)
-		ctx.JSON(http.StatusAccepted, gin.H{
-			"status": "duplicate",
-		})
-		return
-	}
+	// deliveryStore := postgres.NewDeliveryStore(db)
+	// // isNew, err := deliveryStore.TryCreate(ctx.Request.Context(), deliveryId)
+	// // if err != nil {
+	// // 	log.Printf("idempotency check failed for delivery %q: %v", deliveryId, err)
+	// // 	ctx.JSON(http.StatusInternalServerError, gin.H{
+	// // 		"status": "failed idempotency check",
+	// // 	})
+	// // 	return
+	// // }
+	// if !isNew {
+	// 	log.Printf("Webhook ignored: duplicate delivery_id=%q", deliveryId)
+	// 	ctx.JSON(http.StatusAccepted, gin.H{
+	// 		"status": "duplicate",
+	// 	})
+	// 	return
+	// }
 
 	// Unmarshal JSON
 	var payload WorkflowRunPayload
@@ -71,30 +71,30 @@ func HandleGitHubWebHook(ctx *gin.Context, db *sql.DB) {
 	}
 
 	// completed work flow  send further
-	if payload.WorkflowRun.Status != "completed" {
-		log.Printf("[PIPELINE-AUDITOR] Webhook ignored: workflow status=%q (requires completed)", payload.WorkflowRun.Status)
-		ctx.JSON(http.StatusAccepted, gin.H{
-			"status": "ignored",
-			"reason": "workflow is not completed",
-		})
-		return
-	}
+	// if payload.WorkflowRun.Status != "completed" {
+	// 	log.Printf("[PIPELINE-AUDITOR] Webhook ignored: workflow status=%q (requires completed)", payload.WorkflowRun.Status)
+	// 	ctx.JSON(http.StatusAccepted, gin.H{
+	// 		"status": "ignored",
+	// 		"reason": "workflow is not completed",
+	// 	})
+	// 	return
+	// }
 
 	// only send the  failure json other wise ignore it
-	if payload.WorkflowRun.Conclusion == nil ||
-		*payload.WorkflowRun.Conclusion != "failure" {
-		conclusion := ""
-		if payload.WorkflowRun.Conclusion != nil {
-			conclusion = *payload.WorkflowRun.Conclusion
-		}
-		log.Printf("[PIPELINE-AUDITOR] Webhook ignored: workflow conclusion=%q (requires failure)", conclusion)
+	// if payload.WorkflowRun.Conclusion == nil ||
+	// 	*payload.WorkflowRun.Conclusion != "failure" {
+	// 	conclusion := ""
+	// 	if payload.WorkflowRun.Conclusion != nil {
+	// 		conclusion = *payload.WorkflowRun.Conclusion
+	// 	}
+	// 	log.Printf("[PIPELINE-AUDITOR] Webhook ignored: workflow conclusion=%q (requires failure)", conclusion)
 
-		ctx.JSON(http.StatusAccepted, gin.H{
-			"status": "ignored",
-			"reason": "workflow did not fail",
-		})
-		return
-	}
+	// 	ctx.JSON(http.StatusAccepted, gin.H{
+	// 		"status": "ignored",
+	// 		"reason": "workflow did not fail",
+	// 	})
+	// 	return
+	// }
 
 	//  convert the
 	pipelineEvent, err := GitHub_to_PipelineEvent(payload)

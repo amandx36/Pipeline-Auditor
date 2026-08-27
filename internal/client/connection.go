@@ -37,7 +37,7 @@ var (
 // create new connection to  grpc ci-log-collector 
 func newClient()(*Client, error){
 	var addres = collectorAddress ;
-	log.Println("Start the connection to ci-log-collector 01 %s",addres);
+	log.Printf("Start the connection to ci-log-collector 01 %s",addres);
 	// creating a context of 5 sec 
 	ctx,cancel := context.WithTimeout(
 		context.Background(),

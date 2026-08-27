@@ -24,9 +24,9 @@ type Client struct{
 
 }
 func init() {
-    	if collectorAddress == "" {
-        	collectorAddress = "localhost:50501"
-    	}
+    if collectorAddress == "" {
+    collectorAddress = "localhost:50051"
+		}
 	}
 
 var (

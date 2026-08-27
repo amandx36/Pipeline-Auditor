@@ -51,7 +51,7 @@ func HandleGitHubWebHook(ctx *gin.Context, db *sql.DB) {
 			"status": "failed idempotency check",
 		})
 		return
-	}
+	 }
 	if !isNew {
 		log.Printf("Webhook ignored: duplicate delivery_id=%q", deliveryId)
 		ctx.JSON(http.StatusAccepted, gin.H{

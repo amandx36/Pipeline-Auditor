@@ -1,6 +1,7 @@
 package github_webhook
 
 import (
+	"context"
 	"database/sql"
 	"encoding/json"
 	"fmt"
@@ -8,12 +9,29 @@ import (
 	"log"
 	"net/http"
 
+	collectorpb "github.com/amandx36/Pipeline-Auditor/gen/collector"
 	"github.com/amandx36/Pipeline-Auditor/internal/client"
+	"github.com/amandx36/Pipeline-Auditor/internal/models"
 	"github.com/amandx36/Pipeline-Auditor/internal/storage/postgres"
 	"github.com/gin-gonic/gin"
 )
 
 func HandleGitHubWebHook(ctx *gin.Context, db *sql.DB) {
+	handleGitHubWebhook(
+		ctx,
+		postgres.NewDeliveryStore(db),
+		client.CollectLogWrapper,
+	)
+}
+
+type deliveryCreator interface {
+	TryCreate(context.Context, string) (bool, error)
+}
+
+type pipelineDispatcher func(models.PipelineEvent) (*collectorpb.CollectLogsResponse, error)
+
+// handleGitHubWebhook keeps HTTP orchestration independent from concrete storage and transport.
+func handleGitHubWebhook(ctx *gin.Context, deliveryStore deliveryCreator, dispatch pipelineDispatcher) {
 
 	// read the  request body
 	body, err := io.ReadAll(ctx.Request.Body)
@@ -43,7 +61,6 @@ func HandleGitHubWebHook(ctx *gin.Context, db *sql.DB) {
 		})
 		return
 	}
-	deliveryStore := postgres.NewDeliveryStore(db)
 	isNew, err := deliveryStore.TryCreate(ctx.Request.Context(), deliveryId)
 	if err != nil {
 		log.Printf("idempotency check failed for delivery %q: %v", deliveryId, err)
@@ -51,7 +68,7 @@ func HandleGitHubWebHook(ctx *gin.Context, db *sql.DB) {
 			"status": "failed idempotency check",
 		})
 		return
-	 }
+	}
 	if !isNew {
 		log.Printf("Webhook ignored: duplicate delivery_id=%q", deliveryId)
 		ctx.JSON(http.StatusAccepted, gin.H{
@@ -108,7 +125,7 @@ func HandleGitHubWebHook(ctx *gin.Context, db *sql.DB) {
 	fmt.Println("Pipeline Event:", pipelineEvent)
 
 	log.Println("[PIPELINE-AUDITOR] Webhook reached CollectLogs; sending PipelineEvent to CI-LogCollector")
-	response, err := client.CollectLogWrapper(pipelineEvent)
+	response, err := dispatch(pipelineEvent)
 	if err != nil {
 		log.Printf("[PIPELINE-AUDITOR] gRPC CollectLogs failed: %v", err)
 		ctx.JSON(http.StatusFailedDependency, gin.H{
